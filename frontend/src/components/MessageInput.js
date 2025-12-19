@@ -1,14 +1,63 @@
 'use client';
 
-import { useState, KeyboardEvent } from 'react';
+import { useState, useEffect, useRef, KeyboardEvent } from 'react';
+import { getSocket } from '@/lib/socket';
 
-export default function MessageInput({ onSendMessage, disabled }) {
+export default function MessageInput({ onSendMessage, disabled, receiverId }) {
   const [message, setMessage] = useState('');
+  const typingTimeoutRef = useRef(null);
+  const socket = getSocket();
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (socket && receiverId) {
+        socket.emit('typing_stop', { receiverId });
+      }
+    };
+  }, [receiverId, socket]);
 
   const handleSend = () => {
     if (message.trim() && !disabled) {
+      // Stop typing indicator
+      if (socket && receiverId) {
+        socket.emit('typing_stop', { receiverId });
+      }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
       onSendMessage(message.trim());
       setMessage('');
+    }
+  };
+
+  const handleChange = (e) => {
+    setMessage(e.target.value);
+
+    // Emit typing start
+    if (socket && receiverId && e.target.value.trim()) {
+      socket.emit('typing_start', { receiverId });
+
+      // Clear existing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Set timeout to stop typing after 3 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        if (socket && receiverId) {
+          socket.emit('typing_stop', { receiverId });
+        }
+      }, 3000);
+    } else if (socket && receiverId && !e.target.value.trim()) {
+      // Stop typing if message is empty
+      socket.emit('typing_stop', { receiverId });
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     }
   };
 
@@ -25,7 +74,7 @@ export default function MessageInput({ onSendMessage, disabled }) {
         <input
           type="text"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleChange}
           onKeyPress={handleKeyPress}
           placeholder="Type a message..."
           disabled={disabled}

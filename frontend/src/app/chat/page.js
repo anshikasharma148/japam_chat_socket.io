@@ -17,6 +17,7 @@ export default function ChatPage() {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [typingUsers, setTypingUsers] = useState({});
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -36,6 +37,9 @@ export default function ChatPage() {
       if (socket) {
         socket.off('receive_message');
         socket.off('message_sent');
+        socket.off('user_online');
+        socket.off('user_offline');
+        socket.off('user_typing');
       }
     };
   }, [isAuthenticated]);
@@ -109,6 +113,22 @@ export default function ChatPage() {
 
     socket.on('user_offline', (data) => {
       updateUserStatus(data.userId, false);
+    });
+
+    // Handle typing indicators
+    socket.on('user_typing', (data) => {
+      if (data.isTyping) {
+        setTypingUsers((prev) => ({
+          ...prev,
+          [data.userId]: true,
+        }));
+      } else {
+        setTypingUsers((prev) => {
+          const updated = { ...prev };
+          delete updated[data.userId];
+          return updated;
+        });
+      }
     });
   };
 
@@ -204,6 +224,7 @@ export default function ChatPage() {
             currentUserId={user?.id}
             onSendMessage={handleSendMessage}
             loading={messagesLoading}
+            isTyping={typingUsers[selectedUserId] || false}
           />
         </div>
       </div>

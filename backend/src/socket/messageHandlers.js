@@ -144,5 +144,34 @@ export const initializeMessageHandlers = (io, socket) => {
       });
     }
   });
+
+  // Handle typing indicators
+  socket.on('typing_start', (data) => {
+    const { receiverId } = data;
+    const senderId = socket.userId;
+
+    if (!receiverId) return;
+
+    // Notify receiver that sender is typing
+    io.to(`user_${receiverId}`).emit('user_typing', {
+      userId: senderId,
+      username: socket.user.username,
+      isTyping: true
+    });
+  });
+
+  socket.on('typing_stop', (data) => {
+    const { receiverId } = data;
+    const senderId = socket.userId;
+
+    if (!receiverId) return;
+
+    // Notify receiver that sender stopped typing
+    io.to(`user_${receiverId}`).emit('user_typing', {
+      userId: senderId,
+      username: socket.user.username,
+      isTyping: false
+    });
+  });
 };
 

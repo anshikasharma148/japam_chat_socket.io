@@ -4,11 +4,14 @@ import { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 
+import TypingIndicator from './TypingIndicator';
+
 export default function ChatWindow({ 
   messages, 
   currentUserId, 
   onSendMessage, 
-  loading 
+  loading,
+  isTyping = false
 }) {
   const messagesEndRef = useRef(null);
 
@@ -18,7 +21,7 @@ export default function ChatWindow({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]);
 
   if (!currentUserId) {
     return (
@@ -46,13 +49,16 @@ export default function ChatWindow({
             </div>
           </div>
         ) : (
-          messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isOwn={message.senderId === currentUserId}
-            />
-          ))
+          <>
+            {messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isOwn={message.senderId === currentUserId}
+              />
+            ))}
+            {isTyping && <TypingIndicator />}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>
