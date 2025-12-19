@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import { initializeMessageHandlers } from './messageHandlers.js';
 
 // Store active socket connections
 const activeUsers = new Map(); // userId -> socketId
@@ -75,6 +76,9 @@ export const initializeSocketHandlers = (io) => {
         lastSeen: user.lastSeen
       });
     });
+
+    // Initialize message handlers
+    initializeMessageHandlers(io, socket);
 
     // Handle errors
     socket.on('error', (error) => {
