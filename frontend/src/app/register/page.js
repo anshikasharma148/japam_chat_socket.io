@@ -3,11 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import AuthForm from '@/components/AuthForm';
+import ToastContainer from '@/components/ToastContainer';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated, loading: authLoading } = useAuth();
+  const { toasts, success, error, removeToast } = useToast();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -22,7 +25,12 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (result.success) {
-      router.push('/chat');
+      success('Registration successful! Redirecting...');
+      setTimeout(() => {
+        router.push('/chat');
+      }, 500);
+    } else {
+      error(result.message || 'Registration failed');
     }
 
     return result;
@@ -37,9 +45,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">
-      <AuthForm mode="register" onSubmit={handleRegister} loading={loading} />
-    </div>
+    <>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">
+        <AuthForm mode="register" onSubmit={handleRegister} loading={loading} />
+      </div>
+    </>
   );
 }
 

@@ -3,18 +3,20 @@
 import { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
-
+import ChatHeader from './ChatHeader';
 import TypingIndicator from './TypingIndicator';
 
 export default function ChatWindow({ 
   messages, 
   currentUserId, 
   receiverId,
+  receiverUser,
   onSendMessage, 
   loading,
   isTyping = false
 }) {
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,8 +38,13 @@ export default function ChatWindow({
 
   return (
     <div className="flex flex-col h-full bg-white">
+      {/* Chat Header */}
+      {receiverUser && (
+        <ChatHeader user={receiverUser} isOnline={receiverUser.isOnline} />
+      )}
+      
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-2">
         {loading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-gray-500">Loading messages...</div>

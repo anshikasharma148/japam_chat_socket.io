@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import OnlineStatus from './OnlineStatus';
+import SearchBar from './SearchBar';
 
 export default function ChatList({ 
   users, 
@@ -10,6 +12,8 @@ export default function ChatList({
   currentUserId,
   loading 
 }) {
+  const [searchTerm, setSearchTerm] = useState('');
+
   if (loading) {
     return (
       <div className="w-80 bg-gray-50 border-r border-gray-200 p-4">
@@ -19,22 +23,44 @@ export default function ChatList({
   }
 
   // Combine chats and users for display
-  const displayList = chats && chats.length > 0 
-    ? chats.map(chat => ({
-        id: chat.otherUser.id,
-        username: chat.otherUser.username,
-        email: chat.otherUser.email,
-        isOnline: chat.otherUser.isOnline,
-        lastMessage: chat.lastMessage,
-        lastMessageAt: chat.lastMessageAt,
-      }))
-    : users || [];
+  const allItems = useMemo(() => {
+    const chatItems = chats && chats.length > 0 
+      ? chats.map(chat => ({
+          id: chat.otherUser.id,
+          username: chat.otherUser.username,
+          email: chat.otherUser.email,
+          isOnline: chat.otherUser.isOnline,
+          lastMessage: chat.lastMessage,
+          lastMessageAt: chat.lastMessageAt,
+        }))
+      : [];
+    
+    // Add users that don't have chats yet
+    const userItems = users || [];
+    const chatUserIds = new Set(chatItems.map(item => item.id));
+    const newUsers = userItems.filter(user => !chatUserIds.has(user.id));
+    
+    return [...chatItems, ...newUsers];
+  }, [chats, users]);
+
+  // Filter by search term
+  const displayList = useMemo(() => {
+    if (!searchTerm.trim()) return allItems;
+    
+    const term = searchTerm.toLowerCase();
+    return allItems.filter(item => 
+      item.username.toLowerCase().includes(term) ||
+      item.email.toLowerCase().includes(term)
+    );
+  }, [allItems, searchTerm]);
 
   return (
     <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col">
       <div className="p-4 border-b border-gray-200 bg-white">
         <h2 className="text-xl font-semibold text-gray-800">Chats</h2>
       </div>
+      
+      <SearchBar onSearch={setSearchTerm} />
       
       <div className="flex-1 overflow-y-auto">
         {displayList.length === 0 ? (

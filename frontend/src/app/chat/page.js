@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { getSocket } from '@/lib/socket';
@@ -29,20 +29,15 @@ export default function ChatPage() {
     if (isAuthenticated) {
       loadUsers();
       loadChats();
-      setupSocketListeners();
     }
-
-    return () => {
-      const socket = getSocket();
-      if (socket) {
-        socket.off('receive_message');
-        socket.off('message_sent');
-        socket.off('user_online');
-        socket.off('user_offline');
-        socket.off('user_typing');
-      }
-    };
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const cleanup = setupSocketListeners();
+      return cleanup;
+    }
+  }, [isAuthenticated, setupSocketListeners]);
 
   const loadUsers = async () => {
     try {
@@ -78,33 +73,60 @@ export default function ChatPage() {
     }
   };
 
-  const setupSocketListeners = () => {
+  const setupSocketListeners = useCallback(() => {
     const socket = getSocket();
     if (!socket) return;
 
-    socket.on('receive_message', (data) => {
+    const handleReceiveMessage = (data) => {
       const newMessage = data.message;
       
-      // If message is for currently selected user, add to messages
-      if (selectedUserId === newMessage.senderId) {
-        setMessages((prev) => [...prev, newMessage]);
+      // Convert IDs to strings for comparison
+      const currentReceiverId = selectedUserId?.toString();
+      const messageSenderId = newMessage.senderId?.toString();
+      const messageReceiverId = newMessage.receiverId?.toString();
+      const currentUserIdStr = user?.id?.toString();
+      
+      // If message is from currently selected user and I'm the receiver, add to messages
+      if (currentReceiverId === messageSenderId && messageReceiverId === currentUserIdStr) {
+        setMessages((prev) => {
+          // Check if message already exists to avoid duplicates
+          const exists = prev.some(msg => msg.id === newMessage.id);
+          if (exists) return prev;
+          return [...prev, newMessage];
+        });
       }
       
       // Refresh chats list to update last message
       loadChats();
-    });
+    };
 
-    socket.on('message_sent', (data) => {
+    const handleMessageSent = (data) => {
       const newMessage = data.message;
       
-      // Add sent message to current messages
-      if (selectedUserId === newMessage.receiverId) {
-        setMessages((prev) => [...prev, newMessage]);
+      // Convert IDs to strings for comparison
+      const currentReceiverId = selectedUserId?.toString();
+      const messageReceiverId = newMessage.receiverId?.toString();
+      const messageSenderId = newMessage.senderId?.toString();
+      const currentUserIdStr = user?.id?.toString();
+      
+      // Add sent message to current messages if it's for the selected user
+      if (currentReceiverId === messageReceiverId && messageSenderId === currentUserIdStr) {
+        setMessages((prev) => {
+          // Remove temporary message and add real one
+          const filtered = prev.filter(msg => !msg.isSending);
+          // Check if message already exists to avoid duplicates
+          const exists = filtered.some(msg => msg.id === newMessage.id);
+          if (exists) return filtered;
+          return [...filtered, newMessage];
+        });
       }
       
       // Refresh chats list
       loadChats();
-    });
+    };
+
+    socket.on('receive_message', handleReceiveMessage);
+    socket.on('message_sent', handleMessageSent);
 
     // Handle online/offline status updates
     socket.on('user_online', (data) => {
@@ -130,7 +152,15 @@ export default function ChatPage() {
         });
       }
     });
-  };
+
+    return () => {
+      socket.off('receive_message', handleReceiveMessage);
+      socket.off('message_sent', handleMessageSent);
+      socket.off('user_online');
+      socket.off('user_offline');
+      socket.off('user_typing');
+    };
+  }, [selectedUserId, user]);
 
   const updateUserStatus = (userId, isOnline) => {
     // Update users list
@@ -161,6 +191,19 @@ export default function ChatPage() {
   const handleSendMessage = (content) => {
     const socket = getSocket();
     if (!socket || !selectedUserId) return;
+
+    // Optimistically add message to UI
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      senderId: user?.id,
+      receiverId: selectedUserId,
+      content: content,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      isSending: true
+    };
+    
+    setMessages((prev) => [...prev, tempMessage]);
 
     socket.emit('send_message', {
       receiverId: selectedUserId,
@@ -223,6 +266,7 @@ export default function ChatPage() {
             messages={messages}
             currentUserId={user?.id}
             receiverId={selectedUserId}
+            receiverUser={users.find(u => u.id === selectedUserId) || chats.find(c => c.otherUser.id === selectedUserId)?.otherUser}
             onSendMessage={handleSendMessage}
             loading={messagesLoading}
             isTyping={typingUsers[selectedUserId] || false}
