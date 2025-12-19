@@ -101,6 +101,36 @@ export default function ChatPage() {
       // Refresh chats list
       loadChats();
     });
+
+    // Handle online/offline status updates
+    socket.on('user_online', (data) => {
+      updateUserStatus(data.userId, true);
+    });
+
+    socket.on('user_offline', (data) => {
+      updateUserStatus(data.userId, false);
+    });
+  };
+
+  const updateUserStatus = (userId, isOnline) => {
+    // Update users list
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === userId ? { ...user, isOnline } : user
+      )
+    );
+
+    // Update chats list
+    setChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.otherUser.id === userId
+          ? {
+              ...chat,
+              otherUser: { ...chat.otherUser, isOnline },
+            }
+          : chat
+      )
+    );
   };
 
   const handleSelectUser = (userId) => {
