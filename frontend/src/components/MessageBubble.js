@@ -1,5 +1,7 @@
 'use client';
 
+import MessageStatus from './MessageStatus';
+
 export default function MessageBubble({ message, isOwn }) {
   const formatTime = (dateString) => {
     if (!dateString) return '';
@@ -25,31 +27,23 @@ export default function MessageBubble({ message, isOwn }) {
   const isSending = message.isSending;
 
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in`}>
+    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3 px-4 message-enter group`}>
       <div
-        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg transition-opacity ${
+        className={`max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl transition-all duration-200 ${
           isOwn
-            ? 'bg-primary-600 text-white rounded-br-none'
-            : 'bg-gray-200 text-gray-800 rounded-bl-none'
-        } ${isSending ? 'opacity-60' : ''}`}
+            ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-br-md shadow-lg hover:shadow-xl'
+            : 'bg-white dark:bg-dark-700 text-gray-800 dark:text-gray-100 rounded-bl-md shadow-md hover:shadow-lg border border-gray-100 dark:border-dark-600'
+        } ${isSending ? 'opacity-60' : 'opacity-100'}`}
       >
-        <p className="text-sm break-words whitespace-pre-wrap">{message.content}</p>
+        <p className="text-sm break-words whitespace-pre-wrap leading-relaxed">{message.content}</p>
         <div
-          className={`text-xs mt-1 flex items-center space-x-1 ${
-            isOwn ? 'text-primary-100' : 'text-gray-500'
+          className={`text-xs mt-1.5 flex items-center justify-end space-x-1 ${
+            isOwn ? 'text-primary-50' : 'text-gray-500 dark:text-gray-400'
           }`}
         >
-          <span>{formattedTime}</span>
+          <span className="font-medium">{formattedTime}</span>
           {isOwn && (
-            <span className="ml-1">
-              {isSending ? (
-                <span className="text-primary-200">⏳</span>
-              ) : message.isRead ? (
-                <span className="text-blue-200">✓✓</span>
-              ) : (
-                <span className="text-primary-200">✓</span>
-              )}
-            </span>
+            <MessageStatus isRead={message.isRead} isSending={isSending} />
           )}
         </div>
       </div>

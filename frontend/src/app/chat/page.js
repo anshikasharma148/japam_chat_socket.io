@@ -7,6 +7,7 @@ import { getSocket } from '@/lib/socket';
 import { messagesAPI, usersAPI } from '@/lib/api';
 import ChatList from '@/components/ChatList';
 import ChatWindow from '@/components/ChatWindow';
+import DarkModeToggle from '@/components/DarkModeToggle';
 
 export default function ChatPage() {
   const router = useRouter();
@@ -229,24 +230,39 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-dark-900 overflow-hidden">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <header className="glass-effect border-b border-gray-200 dark:border-dark-700 px-6 py-4 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-gray-800">Japam Chat</h1>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold shadow-lg">
+              💬
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold gradient-text">Japam Chat</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Real-time messaging</p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-sm">
+        <div className="flex items-center space-x-3">
+          <DarkModeToggle />
+          <div className="flex items-center space-x-3 px-4 py-2 rounded-xl bg-gray-100 dark:bg-dark-700">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
               {user?.username?.charAt(0).toUpperCase()}
             </div>
-            <span className="text-gray-700 font-medium">{user?.username}</span>
+            <div className="hidden md:block">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{user?.username}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Online</p>
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
           >
-            Logout
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </header>
