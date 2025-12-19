@@ -36,14 +36,14 @@ export default function ChatPage() {
     }
   };
 
-  const loadChats = async () => {
+  const loadChats = useCallback(async () => {
     try {
       const response = await messagesAPI.getChatsList();
       setChats(response.data.data.chats);
     } catch (error) {
       console.error('Error loading chats:', error);
     }
-  };
+  }, []);
 
   const loadMessages = async (userId) => {
     if (!userId) return;
@@ -59,7 +59,7 @@ export default function ChatPage() {
     }
   };
 
-  const updateUserStatus = (userId, isOnline) => {
+  const updateUserStatus = useCallback((userId, isOnline) => {
     // Update users list
     setUsers((prevUsers) =>
       prevUsers.map((user) =>
@@ -78,7 +78,7 @@ export default function ChatPage() {
           : chat
       )
     );
-  };
+  }, []);
 
   const setupSocketListeners = useCallback(() => {
     const socket = getSocket();
