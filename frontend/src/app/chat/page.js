@@ -25,20 +25,6 @@ export default function ChatPage() {
     }
   }, [isAuthenticated, authLoading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadUsers();
-      loadChats();
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const cleanup = setupSocketListeners();
-      return cleanup;
-    }
-  }, [isAuthenticated, setupSocketListeners]);
-
   const loadUsers = async () => {
     try {
       const response = await usersAPI.getAllUsers();
@@ -71,6 +57,27 @@ export default function ChatPage() {
     } finally {
       setMessagesLoading(false);
     }
+  };
+
+  const updateUserStatus = (userId, isOnline) => {
+    // Update users list
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === userId ? { ...user, isOnline } : user
+      )
+    );
+
+    // Update chats list
+    setChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.otherUser.id === userId
+          ? {
+              ...chat,
+              otherUser: { ...chat.otherUser, isOnline },
+            }
+          : chat
+      )
+    );
   };
 
   const setupSocketListeners = useCallback(() => {
@@ -160,28 +167,21 @@ export default function ChatPage() {
       socket.off('user_offline');
       socket.off('user_typing');
     };
-  }, [selectedUserId, user]);
+  }, [selectedUserId, user, loadChats, updateUserStatus]);
 
-  const updateUserStatus = (userId, isOnline) => {
-    // Update users list
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === userId ? { ...user, isOnline } : user
-      )
-    );
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUsers();
+      loadChats();
+    }
+  }, [isAuthenticated]);
 
-    // Update chats list
-    setChats((prevChats) =>
-      prevChats.map((chat) =>
-        chat.otherUser.id === userId
-          ? {
-              ...chat,
-              otherUser: { ...chat.otherUser, isOnline },
-            }
-          : chat
-      )
-    );
-  };
+  useEffect(() => {
+    if (isAuthenticated) {
+      const cleanup = setupSocketListeners();
+      return cleanup;
+    }
+  }, [isAuthenticated, setupSocketListeners]);
 
   const handleSelectUser = (userId) => {
     setSelectedUserId(userId);
