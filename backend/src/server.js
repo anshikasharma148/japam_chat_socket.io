@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.js';
 import messageRoutes from './routes/messages.js';
+import userRoutes from './routes/users.js';
 import { initializeSocketHandlers } from './socket/socketHandlers.js';
 
 // Load environment variables
@@ -39,6 +40,7 @@ app.get('/api/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/users', userRoutes);
 
 // Connect to MongoDB
 connectDB();
