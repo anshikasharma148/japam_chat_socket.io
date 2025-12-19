@@ -9,6 +9,7 @@ import TypingIndicator from './TypingIndicator';
 export default function ChatWindow({ 
   messages, 
   currentUserId, 
+  receiverId,
   onSendMessage, 
   loading,
   isTyping = false
@@ -64,7 +65,7 @@ export default function ChatWindow({
       </div>
 
       {/* Message Input */}
-      <MessageInput onSendMessage={onSendMessage} disabled={loading} />
+      <MessageInput onSendMessage={onSendMessage} disabled={loading} receiverId={receiverId} />
     </div>
   );
 }

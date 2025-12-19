@@ -222,6 +222,7 @@ export default function ChatPage() {
           <ChatWindow
             messages={messages}
             currentUserId={user?.id}
+            receiverId={selectedUserId}
             onSendMessage={handleSendMessage}
             loading={messagesLoading}
             isTyping={typingUsers[selectedUserId] || false}
