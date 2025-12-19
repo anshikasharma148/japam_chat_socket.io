@@ -4,6 +4,8 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/database.js';
+import authRoutes from './routes/auth.js';
+import { initializeSocketHandlers } from './socket/socketHandlers.js';
 
 // Load environment variables
 dotenv.config();
@@ -28,9 +30,6 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Import routes
-import authRoutes from './routes/auth.js';
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
@@ -42,14 +41,8 @@ app.use('/api/auth', authRoutes);
 // Connect to MongoDB
 connectDB();
 
-// Socket.IO connection handling (will be enhanced in Phase 3)
-io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
-  
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
-});
+// Initialize Socket.IO handlers
+initializeSocketHandlers(io);
 
 const PORT = process.env.PORT || 5000;
 
