@@ -60,9 +60,9 @@ export const initializeMessageHandlers = (io, socket) => {
       // Emit to sender (confirmation)
       socket.emit('message_sent', {
         message: {
-          id: message._id,
-          senderId: message.senderId._id,
-          receiverId: message.receiverId._id,
+          id: message._id.toString(),
+          senderId: message.senderId._id.toString(),
+          receiverId: message.receiverId._id.toString(),
           content: message.content,
           isRead: message.isRead,
           createdAt: message.createdAt
@@ -72,10 +72,10 @@ export const initializeMessageHandlers = (io, socket) => {
       // Emit to receiver (if online)
       io.to(`user_${receiverId}`).emit('receive_message', {
         message: {
-          id: message._id,
-          senderId: message.senderId._id,
+          id: message._id.toString(),
+          senderId: message.senderId._id.toString(),
           senderUsername: message.senderId.username,
-          receiverId: message.receiverId._id,
+          receiverId: message.receiverId._id.toString(),
           content: message.content,
           isRead: message.isRead,
           createdAt: message.createdAt
